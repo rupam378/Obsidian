@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(curl)",
+      "Exec(Move-Item)"
+    ]
+  }
+}

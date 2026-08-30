@@ -1,0 +1,10 @@
+{
+  "id": "test-plugin",
+  "name": "Test Plugin",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Simple test plugin to check if Obsidian can detect custom plugins",
+  "author": "Test",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
