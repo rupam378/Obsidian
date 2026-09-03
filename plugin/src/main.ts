@@ -1,5 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting, Notice, TFile } from 'obsidian';
 import { KnowledgeAssistantPanel } from './panel';
+import './styles.css';
 
 interface KnowledgeAssistantSettings {
     backendUrl: string;
@@ -19,8 +20,17 @@ export default class KnowledgeAssistantPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
 
+        // Load styles - inject CSS dynamically
+        const cssContent = await this.loadCSSAsString();
+        if (cssContent) {
+            const styleEl = document.createElement('style');
+            styleEl.textContent = cssContent;
+            styleEl.id = 'ka-styles';
+            document.head.appendChild(styleEl);
+        }
+
         // Add ribbon icon
-        this.addRibbonIcon('brain', 'Knowledge Assistant', () => {
+        this.addRibbonIcon('star', 'Knowledge Assistant', () => {
             this.activatePanel();
         });
 
@@ -72,6 +82,19 @@ export default class KnowledgeAssistantPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    async loadCSSAsString(): Promise<string> {
+        try {
+            // Try to load the CSS file
+            const response = await fetch(this.manifest.dir + '/styles.css');
+            if (response.ok) {
+                return await response.text();
+            }
+        } catch (e) {
+            console.warn('Could not load CSS file, using inline styles');
+        }
+        return '';
     }
 
     activatePanel() {
@@ -199,7 +222,7 @@ export default class KnowledgeAssistantPlugin extends Plugin {
                 return await response.json();
             }
         } catch (error) {
-            console.error('Error getting stats');
+            console.error('Error getting stats', error);
         }
         return null;
     }

@@ -162,16 +162,27 @@
               "icon": "lucide-list",
               "title": "Outline"
             }
+          },
+          {
+            "id": "9eac2e739e25ac05",
+            "type": "leaf",
+            "state": {
+              "type": "knowledge-assistant-view",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Knowledge Assistant"
+            }
           }
-        ]
+        ],
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
+      "obsidian-knowledge-assistant:Knowledge Assistant": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -182,5 +193,17 @@
     }
   },
   "active": "4265ea9eecc697fd",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "SPRINT_PLAN.md",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-e4dc9562-9ee4-4aa0-b8b0-abc9954f81c9.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-419d0a06-73b6-4743-80d4-8a94315a6d0f.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-ad2aba1e-5724-4be4-8750-facd965277a4.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-fc6abc62-1c52-4f64-9626-f17f31889d38.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-4d20a7c3-24ea-48ed-b0a8-720767bd86eb.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-ce353ac9-b3f1-40eb-a8e9-48eb5d17c89a.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-9c0dbd97-852e-4c19-9dbd-3ff21a2100cd.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/0-e73bb3c1-0dc5-4606-beac-5ce7e1efc377.txn",
+    "backend/lancedb/obsidian_vault.lance/_transactions/1-89d85e9f-d145-4d78-8434-21e2e7f0528b.txn",
+    "backend/lancedb/obsidian_vault.lance/data/bfaf3772-f93e-487f-b2a9-ef322533737f.lance"
+  ]
 }

@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import { copyFileSync, existsSync } from "fs";
+import { join } from "path";
 
 const banner =
 `/*
@@ -51,8 +53,20 @@ const context = await esbuild.context({
     outfile: 'main.js',
 });
 
+// Copy CSS file to output directory
+const copyCSS = () => {
+    const cssSource = join(process.cwd(), 'src', 'styles.css');
+    const cssDest = join(process.cwd(), 'styles.css');
+    
+    if (existsSync(cssSource)) {
+        copyFileSync(cssSource, cssDest);
+        console.log('CSS file copied successfully');
+    }
+};
+
 if (prod) {
     await context.rebuild();
+    copyCSS();
     process.exit(0);
 } else {
     await context.watch();

@@ -6,6 +6,7 @@ from flask_cors import CORS
 import lancedb
 from sentence_transformers import SentenceTransformer
 import numpy as np
+import pandas as pd
 import pyarrow as pa
 from llama_cpp import Llama
 from dotenv import load_dotenv
@@ -22,9 +23,23 @@ DB_PATH = os.getenv('DB_PATH', './lancedb')
 PORT = int(os.getenv('PORT', 5000))
 
 # LLM Configuration
-LLM_MODEL_PATH = os.getenv('LLM_MODEL_PATH', '')
+LLM_ENABLED = os.getenv('LLM_ENABLED', 'false').strip().lower() in {'1', 'true', 'yes', 'on'}
+LLM_MODEL_PATH = os.getenv('LLM_MODEL_PATH', '').strip()
 LLM_N_CTX = int(os.getenv('LLM_N_CTX', 2048))
 LLM_N_THREADS = int(os.getenv('LLM_N_THREADS', 4))
+
+
+def is_llm_configured(model_path: str | None = None) -> bool:
+    """Return True only when explicit LLM generation is enabled and a valid GGUF file exists."""
+    if model_path is None:
+        configured_path = (LLM_MODEL_PATH or '').strip()
+    else:
+        configured_path = model_path.strip()
+
+    if not LLM_ENABLED or not configured_path:
+        return False
+    return os.path.isfile(configured_path) and configured_path.lower().endswith('.gguf')
+
 
 # Initialize LanceDB with local persistence
 db = lancedb.connect(DB_PATH)
@@ -36,19 +51,26 @@ embedder = SentenceTransformer('all-MiniLM-L6-v2')
 llm = None
 
 def get_llm():
-    """Lazy load LLM only when needed"""
+    """Lazy load LLM only when needed and only if it is enabled and valid."""
     global llm
-    if llm is None and LLM_MODEL_PATH:
-        try:
-            llm = Llama(
-                model_path=LLM_MODEL_PATH,
-                n_ctx=LLM_N_CTX,
-                n_threads=LLM_N_THREADS,
-                verbose=False
-            )
-            print(f"LLM loaded from {LLM_MODEL_PATH}")
-        except Exception as e:
-            print(f"Failed to load LLM: {e}")
+    if llm is not None:
+        return llm
+
+    if not is_llm_configured():
+        print("LLM disabled or model path invalid; using template-based generation.")
+        return None
+
+    try:
+        llm = Llama(
+            model_path=LLM_MODEL_PATH,
+            n_ctx=LLM_N_CTX,
+            n_threads=LLM_N_THREADS,
+            verbose=False
+        )
+        print(f"LLM loaded from {LLM_MODEL_PATH}")
+    except Exception as e:
+        print(f"Failed to load LLM: {e}")
+        llm = None
     return llm
 
 # Create or get table
@@ -169,13 +191,19 @@ def generate_content(query, context_docs):
             f"From {doc['metadata']['path']}:\n{doc['document']}" 
             for doc in context_docs
         ])
-        
+
+        if not context_docs:
+            return (
+                "I couldn't find enough matching notes in the vault for that question. "
+                "Try a broader query or add more relevant content to your notes."
+            )
+
         return f"""Based on your notes, here's what I found about "{query}":
 
 {context_text}
 
 This information is drawn from {len(context_docs)} relevant notes in your vault.
-(Note: LLM not configured - using template-based generation)"""
+(Note: local AI generation is off or unavailable, so this is a note-based summary.)"""
     
     # RAG: Create context-aware prompt
     context_text = "\n\n".join([
@@ -260,9 +288,11 @@ def search():
         # Format results
         formatted_results = []
         for _, row in results.iterrows():
+            # Handle NaN values
+            doc_content = row['document'] if pd.notna(row['document']) else ""
             formatted_results.append({
                 'id': row['id'],
-                'document': row['document'],
+                'document': doc_content,
                 'metadata': {
                     'path': row['path'],
                     'file': row['file']
@@ -297,9 +327,11 @@ def generate():
         # Format context documents
         context_docs = []
         for _, row in search_results.iterrows():
+            # Handle NaN values
+            doc_content = row['document'] if pd.notna(row['document']) else ""
             context_docs.append({
                 'id': row['id'],
-                'document': row['document'],
+                'document': doc_content,
                 'metadata': {
                     'path': row['path'],
                     'file': row['file']
@@ -325,7 +357,8 @@ def stats():
         table = get_table()
         count = table.count_rows()
         llm_status = {
-            "available": LLM_MODEL_PATH != "",
+            "available": is_llm_configured(),
+            "enabled": LLM_ENABLED,
             "model_path": LLM_MODEL_PATH if LLM_MODEL_PATH else None,
             "loaded": llm is not None
         }
